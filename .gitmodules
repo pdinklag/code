@@ -1,0 +1,3 @@
+[submodule "test/iopp"]
+	path = test/iopp
+	url = https://github.com/pdinklag/iopp
