@@ -38,3 +38,7 @@ add_test(rice ${CMAKE_CURRENT_BINARY_DIR}/test-rice)
 add_executable(test-universal test_universal.cpp)
 target_link_libraries(test-universal PRIVATE code iopp)
 add_test(universal ${CMAKE_CURRENT_BINARY_DIR}/test-universal)
+
+add_executable(test-examples test_examples.cpp)
+target_link_libraries(test-examples PRIVATE code iopp)
+add_test(examples ${CMAKE_CURRENT_BINARY_DIR}/test-examples)
