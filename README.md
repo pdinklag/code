@@ -87,9 +87,7 @@ Universes are defined using the `code::Universe` struct.
 The following example uses [iopp](https://github.com/pdinklag/iopp) to encode some integers into a string and decode them again using a string stream.
 
 ```cpp
-#include <sstream>
 #include <iopp/bitwise_io.hpp>
-
 #include <code.hpp>
 
 // ...
@@ -101,7 +99,7 @@ code::Universe u(10, 20);
 std::string buffer;
 {
     std::ostringstream out;
-    auto sink = iopp::bitwise_output_to(out);
+    auto sink = iopp::bitwise_output_to(std::back_inserter(buffer));
 
     code::Binary::encode(sink, 17, 5);     // encode binary with an explicit number of 5 bits
     code::Binary::encode(sink, 17, u);     // encode binary using our universe (encodes 17-10 = 7 with 4 bits)
@@ -113,9 +111,6 @@ std::string buffer;
     code::Rice::encode(sink, 13, 3, u);    // encode Rice using a Golomb exponent of 3 and our universe (encodes 13-10 = 3)
     code::Vbyte::encode(sink, 18, 8);      // encode vbyte using a byte size of 8 bits
     code::Vbyte::encode(sink, 18, 8, u);   // encode vbyte using a byte size of 8 bits and our universe (encoded 18-10 = 8)
-
-    sink.flush();
-    buffer = out.str();
 }
 
 // decode
@@ -152,12 +147,10 @@ For encoding, we can convert the Huffman tree into a Huffman table that maps eac
 
 #### Example
 
-The following example shows a roundtrip encoding a decoding a string using Huffman codes.
+The following example shows a roundtrip encoding a decoding a string using Huffman codes and [iopp](https://github.com/pdinklag/iopp).
 
 ```cpp
-#include <sstream>
 #include <iopp/bitwise_io.hpp>
-
 #include <code.hpp>
 
 // ...
@@ -167,8 +160,7 @@ std::string const input_str = "Lorem ipsum dolor sit amet, consectetur adipiscin
 // encode
 std::string buffer;
 {
-    std::ostringstream out;
-    auto sink = iopp::bitwise_output_to(out);
+    auto sink = iopp::bitwise_output_to(std::back_inserter(buffer));
 
     // construct the Huffman tree for the input
     code::HuffmanTree<char> huffman_tree(input_str.begin(), input_str.end());
@@ -183,9 +175,6 @@ std::string buffer;
     for(char const c : input_str) {
         code::Huffman::encode(sink, c, huffman_table);
     }
-
-    sink.flush();
-    buffer = out.str();
 }
 
 // decode
@@ -201,7 +190,5 @@ std::string buffer;
     while(src) {
         decoded_str.push_back(char(code::Huffman::decode(src, huffman_tree_root)));
     }
-
-    REQUIRE(decoded_str == input_str);
 }
 ```

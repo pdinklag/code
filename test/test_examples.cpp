@@ -25,9 +25,7 @@
  * SOFTWARE.
  */
 
-#include <sstream>
 #include <iopp/bitwise_io.hpp>
-
 #include <code.hpp>
 
 #define REQUIRE(x) if(!(x)) std::abort();
@@ -39,8 +37,7 @@ void example_universal() {
     // encode
     std::string buffer;
     {
-        std::ostringstream out;
-        auto sink = iopp::bitwise_output_to(out);
+        auto sink = iopp::bitwise_output_to(std::back_inserter(buffer));
 
         code::Binary::encode(sink, 17, 5);     // encode binary with an explicit number of 5 bits
         code::Binary::encode(sink, 17, u);     // encode binary using our universe (encodes 17-10 = 7 with 4 bits)
@@ -52,15 +49,11 @@ void example_universal() {
         code::Rice::encode(sink, 13, 3, u);    // encode Rice using a Golomb exponent of 3 and our universe (encodes 13-10 = 3)
         code::Vbyte::encode(sink, 18, 8);      // encode vbyte using a byte size of 8 bits
         code::Vbyte::encode(sink, 18, 8, u);   // encode vbyte using a byte size of 8 bits and our universe (encoded 18-10 = 8)
-
-        sink.flush();
-        buffer = out.str();
     }
 
     // decode
     {
-        auto in = std::istringstream(buffer);
-        auto src = iopp::bitwise_input_from(in);
+        auto src = iopp::bitwise_input_from(buffer.begin(), buffer.end());
 
         auto const binary1 = code::Binary::decode(src, 5);    // decode binary with an explicit number of 5 bits
         REQUIRE(binary1 == 17);
@@ -91,8 +84,7 @@ void example_huffman() {
     // encode
     std::string buffer;
     {
-        std::ostringstream out;
-        auto sink = iopp::bitwise_output_to(out);
+        auto sink = iopp::bitwise_output_to(std::back_inserter(buffer));
 
         // construct the Huffman tree for the input
         code::HuffmanTree<char> huffman_tree(input_str.begin(), input_str.end());
@@ -107,9 +99,6 @@ void example_huffman() {
         for(char const c : input_str) {
             code::Huffman::encode(sink, c, huffman_table);
         }
-
-        sink.flush();
-        buffer = out.str();
     }
 
     // decode
