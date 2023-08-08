@@ -28,6 +28,7 @@
 #ifndef _CODE_UNIVERSE_HPP
 #define _CODE_UNIVERSE_HPP
 
+#include <algorithm>
 #include <bit>
 #include <concepts>
 #include <cstdint>
@@ -42,12 +43,10 @@ namespace code {
  */
 class Universe {
 private:
-    static constexpr auto UINTMAX_BITS = std::numeric_limits<uintmax_t>::digits;
-    
     uintmax_t min_, max_, entropy_;
 
     inline static constexpr uintmax_t wc_entropy(uintmax_t min, uintmax_t max) {
-        return UINTMAX_BITS - std::countl_zero(max - min);
+        return std::max(1UL, std::bit_width(max - min));
     }
 
     inline constexpr Universe(uintmax_t min, uintmax_t max, uintmax_t entropy) : min_(min), max_(max), entropy_(entropy) {
@@ -91,7 +90,7 @@ public:
      * \param entropy the worst-case entropy of the universe
      * \return the universe of all integers that can be represented using the given number of bits
      */
-    inline static constexpr Universe with_entropy(uintmax_t entropy) { return Universe(0, UINTMAX_MAX >> (UINTMAX_BITS - entropy), entropy); }
+    inline static constexpr Universe with_entropy(uintmax_t entropy) { return Universe(0, UINTMAX_MAX >> (std::numeric_limits<uintmax_t>::digits - entropy), entropy); }
 
     /**
      * \brief Returns the universe specified by a minimum value and the delta between maximum and minimum
