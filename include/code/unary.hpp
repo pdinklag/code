@@ -58,7 +58,7 @@ public:
             x -= UINTMAX_BITS;
         }
 
-        sink.write(UINTMAX_MAX, x);
+        if(x > 0) sink.write(UINTMAX_MAX, x);
         sink.write(0);
     }
 
