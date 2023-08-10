@@ -339,8 +339,7 @@ private:
         bool const b = *bits++;
         if(b) {
             // decode character and construct leaf
-            EliasDelta delta;
-            auto const c = (Char)delta.decode(src, u);
+            auto const c = (Char)Binary::decode(src, u);
             nodes_.emplace_back(c, 0); // no weight
             
             auto* v = &nodes_.back();
@@ -377,8 +376,9 @@ public:
             leaves_.reserve(alphabet_size);
 
             // second, decode the universe of characters
-            EliasDelta delta;
-            Universe u(delta.decode(src) - 1, UINTMAX_MAX);
+            auto const min = EliasDelta::decode(src, Universe::umax());
+            auto const max = EliasDelta::decode(src, Universe::at_least(min));
+            Universe u(min, max);
             
             // build the tree and decode characters
             auto bits = topology.cbegin();
@@ -456,7 +456,7 @@ public:
 
 private:
     template<BitSink Sink>
-    void encode_tree(Node const& v, Sink& sink, std::vector<UChar>& uchars_ltr, UChar& min) const {
+    void encode_tree(Node const& v, Sink& sink, std::vector<UChar>& uchars_ltr, Range& range) const {
         // write a bit indicating whether this node is a leaf or an inner node
         // in the latter case, it is guaranteed to have two children, so a single bit suffices
         sink.write(v.is_leaf());
@@ -464,11 +464,11 @@ private:
             // register represented character
             UChar const c = (UChar)*v;
             uchars_ltr.emplace_back(c);
-            min = std::min(min, c);
+            range.contain(c);
         } else {
             // traverse children in left-to-right order
-            encode_tree(v.left_child(), sink, uchars_ltr, min);
-            encode_tree(v.right_child(), sink, uchars_ltr, min);
+            encode_tree(v.left_child(), sink, uchars_ltr, range);
+            encode_tree(v.right_child(), sink, uchars_ltr, range);
         }
     }
 
@@ -494,20 +494,19 @@ public:
         std::vector<UChar> uchars_ltr;
         uchars_ltr.reserve(alphabet_size);
 
-        UChar min = std::numeric_limits<UChar>::max();
-
+        Range range;
         if(root_) {
             // encode tree and gather characters left to right
-            encode_tree(root(), sink, uchars_ltr, min);
+            encode_tree(root(), sink, uchars_ltr, range);
 
             // encode universe of characters using delta codes
-            Universe u(min, UINTMAX_MAX);
-            EliasDelta delta;
-            delta.encode(sink, u.min() + 1);
+            Universe u(range);
+            EliasDelta::encode(sink, u.min(), Universe::umax());
+            EliasDelta::encode(sink, u.max(), Universe::at_least(u.min()));
 
             // encode characters as they occur in the tree in left-to-right order
             for(auto c : uchars_ltr) {
-                delta.encode(sink, c, u);
+                Binary::encode(sink, c, u);
             }
         } else {
             // the tree is empty
