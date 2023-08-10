@@ -35,6 +35,8 @@
 #include <limits>
 #include <utility>
 
+#include "range.hpp"
+
 namespace code {
 
 /**
@@ -66,6 +68,15 @@ public:
      * \return the universe of all unsigned integers that can be represented on the system
      */
     inline static constexpr Universe umax() { return Universe(0, UINTMAX_MAX); }
+
+
+    /**
+     * \brief Returns the universe of all unsigned integers that are at least as large as the stated minimum
+     * 
+     * \param min the minimum value of the universe
+     * \return the universe of all unsigned integers that are at least as large as min
+     */
+    inline static constexpr Universe at_least(uintmax_t min) { return Universe(min, UINTMAX_MAX); }
 
     /**
      * \brief Returns the universe of all integers that can be represented by the given type
@@ -125,6 +136,16 @@ public:
      * \param max the maximum integer of the universe
      */
     inline constexpr Universe(uintmax_t const min, uintmax_t const max) : Universe(min, max, wc_entropy(min, max)) {
+    }
+
+    /**
+     * \brief Defines a universe for the specified unsigned integer range
+     * 
+     * Note that it is not verified that `min <= max`.
+     * 
+     * \param range the range
+     */
+    inline Universe(Range const& range) : Universe(range.min(), range.max()) {
     }
 
     /**
