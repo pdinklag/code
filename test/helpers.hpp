@@ -22,6 +22,7 @@ struct SimpleUint64BitSink {
     }
 
     inline void flush() {}
+    inline size_t num_bits_written() const { return 0; }
 };
 
 struct SimpleUint64BitSource {
