@@ -48,7 +48,7 @@ private:
     uintmax_t min_, max_, entropy_;
 
     inline static constexpr uintmax_t wc_entropy(uintmax_t min, uintmax_t max) {
-        return std::max(1UL, std::bit_width(max - min));
+        return std::max(uintmax_t(1), uintmax_t(std::bit_width(max - min)));
     }
 
     inline constexpr Universe(uintmax_t min, uintmax_t max, uintmax_t entropy) : min_(min), max_(max), entropy_(entropy) {
