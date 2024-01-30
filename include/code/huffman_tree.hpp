@@ -284,7 +284,7 @@ public:
 
             // if the alphabet has exactly one character, we introduce a new character of zero frequency so we actually get a Huffman tree
             if(histogram.size() == 1) {
-                histogram.emplace(~c, 0); // nb: since c is the only character, ~c is a new one
+                histogram.emplace(c + 1, 0); // nb: since c is the only character, c + 1 is guaranteed to be a new one
             }
 
             // construct and enqueue leaves
