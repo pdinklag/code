@@ -78,20 +78,21 @@ TEST_SUITE("code::Huffman") {
                 CHECK(bits == 0b110110110101000U); // nb: LSBF
 
                 // we should now be able to decode the universe of ['s','z']
-                EliasDelta delta;
-                auto const umin = delta.decode(src) - 1;
+                auto const umin = EliasDelta::decode(src, Universe::umax());
+                auto const umax = EliasDelta::decode(src, Universe::at_least(umin));
                 CHECK(umin == 's');
-                auto const u = Universe(umin, UINTMAX_MAX);
+                CHECK(umax == 'z');
+                auto const u = Universe(umin, umax);
 
                 // finally, we should be able to decode the characters in left-to-right order
-                CHECK(delta.decode(src, u) == 'u');
-                CHECK(delta.decode(src, u) == 'x');
-                CHECK(delta.decode(src, u) == 'y');
-                CHECK(delta.decode(src, u) == 'z');
-                CHECK(delta.decode(src, u) == 'v');
-                CHECK(delta.decode(src, u) == 'w');
-                CHECK(delta.decode(src, u) == 't');
-                CHECK(delta.decode(src, u) == 's');
+                CHECK(Binary::decode(src, u) == 'u');
+                CHECK(Binary::decode(src, u) == 'x');
+                CHECK(Binary::decode(src, u) == 'y');
+                CHECK(Binary::decode(src, u) == 'z');
+                CHECK(Binary::decode(src, u) == 'v');
+                CHECK(Binary::decode(src, u) == 'w');
+                CHECK(Binary::decode(src, u) == 't');
+                CHECK(Binary::decode(src, u) == 's');
             }
             {
                 // ... and all of that should work automatically
