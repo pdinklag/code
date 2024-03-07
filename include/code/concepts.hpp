@@ -124,6 +124,37 @@ concept IntegerEncoder =
     requires(T subject, SomeBitSink sink, uintmax_t x, Universe u) {
         { subject.encode(sink, x, u) };
     };
+
+/**
+ * \brief Concept for histogram entries
+ * 
+ * In order to satisfy this concept, the class must be an input iterator over pairs of characters and their assigned frequencies.
+ * 
+ * \tparam T the type
+ * \tparam Char the character type
+ */
+template<typename T, typename Char>
+concept HistogramEntry =
+    std::input_iterator<T> &&
+    std::convertible_to<std::iter_value_t<T>, std::pair<Char, size_t>>;
+
+/**
+ * \brief Concept for histograms that assign frequencies to characters
+ * 
+ * In order to satisfy this concept, the class be able to report a size (number of entries), as well as begin and end iterators over \ref tdc::code::HistogramEntry "histogram entries"
+ * 
+ * \tparam T the type
+ * \tparam Char the character type
+ */
+template<typename T, typename Char>
+concept Histogram =
+    requires(T const& subject) {
+        { subject.size() } -> std::unsigned_integral;
+        { subject.begin() } -> std::input_iterator;
+        { subject.begin() } -> HistogramEntry<Char>;
+        { subject.end() } -> std::input_iterator;
+    };
+
 }
 
 #endif

@@ -220,6 +220,48 @@ private:
     Node const* root_;
     std::unordered_map<Char, Node const*> leaves_;
 
+    template<Histogram<Char> H>
+    void build_from_histogram(H const& histogram) {
+        // define max-priority queue of tree nodes
+        struct FreqCompare {
+            bool operator()(Node const* a, Node const* b) const {
+                return (a->freq() > b->freq()) // consider nodes with lower frequency first
+                    || (a->freq() == b->freq() && a->is_leaf() && !b->is_leaf()) // if two nodes have the same frequency, consider leaves first
+                    || (a->freq() == b->freq() && a->is_leaf() && b->is_leaf() && **a > **b) // if two leaves have the same frequency, order ascending
+                    ;
+            }
+        };
+        std::priority_queue<Node*, std::vector<Node*>, FreqCompare> queue;
+
+        // construct and enqueue leaves
+        nodes_.reserve(2 * histogram.size());
+        leaves_.reserve(histogram.size());
+
+        for(auto e : histogram) {
+            nodes_.emplace_back(e.first, e.second);
+            auto* pnode = &nodes_.back();
+
+            leaves_.emplace(e.first, pnode);
+            queue.emplace(pnode);
+        }
+
+        // build Huffman tree
+        auto alphabet_size = queue.size();
+        while(alphabet_size-- > 1) {
+            // get the next two nodes from the priority queue
+            auto* r = queue.top(); queue.pop();
+            auto* l = queue.top(); queue.pop();
+            assert(r->freq() <= l->freq());
+
+            // create a new node as parent of l and r
+            nodes_.emplace_back(*l, *r);
+            queue.push(&nodes_.back());
+        }
+
+        root_ = queue.top();
+        assert(queue.size() == 1);
+    }
+
 public:
     HuffmanTree() : root_(nullptr) {
     }
@@ -256,65 +298,46 @@ public:
             return;
         }
 
-        // define max-priority queue of tree nodes
-        struct FreqCompare {
-            bool operator()(Node const* a, Node const* b) const {
-                return (a->freq() > b->freq()) // consider nodes with lower frequency first
-                    || (a->freq() == b->freq() && a->is_leaf() && !b->is_leaf()) // if two nodes have the same frequency, consider leaves first
-                    || (a->freq() == b->freq() && a->is_leaf() && b->is_leaf() && **a > **b) // if two leaves have the same frequency, order ascending
-                    ;
-            }
-        };
-        std::priority_queue<Node*, std::vector<Node*>, FreqCompare> queue;
+        // compute histogram
+        Char c;
+        std::unordered_map<Char, size_t> histogram;
+        while(it != end) {
+            c = *it++;
 
-        {
-            // compute histogram
-            Char c;
-            std::unordered_map<Char, size_t> histogram;
-            while(it != end) {
-                c = *it++;
-
-                auto e = histogram.find(c);
-                if(e != histogram.end()) {
-                    ++e->second;
-                } else {
-                    histogram.emplace(c, 1);
-                }
-            }
-
-            // if the alphabet has exactly one character, we introduce a new character of zero frequency so we actually get a Huffman tree
-            if(histogram.size() == 1) {
-                histogram.emplace(c + 1, 0); // nb: since c is the only character, c + 1 is guaranteed to be a new one
-            }
-
-            // construct and enqueue leaves
-            nodes_.reserve(2 * histogram.size());
-            leaves_.reserve(histogram.size());
-
-            for(auto e : histogram) {
-                nodes_.emplace_back(e.first, e.second);
-                auto* pnode = &nodes_.back();
-
-                leaves_.emplace(e.first, pnode);
-                queue.emplace(pnode);
+            auto e = histogram.find(c);
+            if(e != histogram.end()) {
+                ++e->second;
+            } else {
+                histogram.emplace(c, 1);
             }
         }
 
-        // build Huffman tree
-        auto alphabet_size = queue.size();
-        while(alphabet_size-- > 1) {
-            // get the next two nodes from the priority queue
-            auto* r = queue.top(); queue.pop();
-            auto* l = queue.top(); queue.pop();
-            assert(r->freq() <= l->freq());
-
-            // create a new node as parent of l and r
-            nodes_.emplace_back(*l, *r);
-            queue.push(&nodes_.back());
+        // if the alphabet has exactly one character, we introduce a new character of zero frequency so we actually get a Huffman tree
+        if(histogram.size() == 1) {
+            histogram.emplace(c + 1, 0); // nb: since c is the only character, c + 1 is guaranteed to be a new one
         }
 
-        root_ = queue.top();
-        assert(queue.size() == 1);
+        build_from_histogram(histogram);
+    }
+
+    /**
+     * \brief Constructs the Huffman tree for the given input histogram
+     * 
+     * This is done using a folklore algorithm.
+     * The histogram forms the initial content of a priority queue used to build the tree bottom-up using the two least frequent nodes in each step.
+     * 
+     * Consider a node with two children.
+     * The following (arbitrarily chosen) properties are maintained to ensure deterministic results:
+     * * The frequency of the left child is greater than or equal to that of the right child.
+     * * If both children have the same frequency and one child is a leaf and the other an inner node, the leaf will become the left child.
+     * * When both children are leaves of the same frequency, they will be ordered such that the right child represents the smaller character.
+     * 
+     * \tparam H the histogram type
+     * \param histogram the input histogram
+     */
+    template<Histogram<Char> H>
+    HuffmanTree(H const& histogram) {
+        build_from_histogram(histogram);
     }
 
 private:
