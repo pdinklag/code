@@ -214,6 +214,38 @@ public:
         }
     };
 
+    /**
+     * \brief Builds the Huffman table via a temporary Huffman tree for the given input histogram
+     * 
+     * This is equivalent to constructing a huffman tree, retrieving the \ref table, and then discarding the tree.
+     * 
+     * \tparam H the histogram type
+     * \param histogram the input histogram
+     * \return a mapping from all input characters to their Huffman codes
+     */
+    template<Histogram<Char> H>
+    static auto build_table(H const& histogram) {
+        HuffmanTree<Char> tree(histogram);
+        return tree.table();
+    }
+
+    /**
+     * \brief Builds the Huffman table via a temporary Huffman tree for the given input
+     * 
+     * This is equivalent to constructing a huffman tree, retrieving the \ref table, and then discarding the tree.
+     * 
+     * \tparam It the input iterator
+     * \param it the input
+     * \param end the end of the input
+     * \return a mapping from all input characters to their Huffman codes
+     */
+    template<std::input_iterator It>
+    requires std::is_convertible_v<typename std::iterator_traits<It>::value_type, Char>
+    static auto build_table(It begin, It const end) {
+        HuffmanTree<Char> tree(begin, end);
+        return tree.table();
+    }
+
 private:
     std::vector<Node> nodes_;
 
