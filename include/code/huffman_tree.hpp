@@ -38,6 +38,7 @@
 #include <utility>
 
 #include "concepts.hpp"
+#include "counter.hpp"
 #include "huffman_code.hpp"
 #include "elias_delta.hpp"
 
@@ -332,21 +333,11 @@ public:
 
         // compute histogram
         Char c;
-        std::unordered_map<Char, size_t> histogram;
-        while(it != end) {
-            c = *it++;
-
-            auto e = histogram.find(c);
-            if(e != histogram.end()) {
-                ++e->second;
-            } else {
-                histogram.emplace(c, 1);
-            }
-        }
+        Counter<Char> histogram(it, end);
 
         // if the alphabet has exactly one character, we introduce a new character of zero frequency so we actually get a Huffman tree
         if(histogram.size() == 1) {
-            histogram.emplace(c + 1, 0); // nb: since c is the only character, c + 1 is guaranteed to be a new one
+            histogram.set(c + 1, 0); // nb: since c is the only character, c + 1 is guaranteed to be a new one
         }
 
         build_from_histogram(histogram);
