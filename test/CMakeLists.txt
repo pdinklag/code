@@ -1,7 +1,6 @@
-# we need the iopp submodule, initialize it
-set(CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmakemodules")
-include(InitGitSubmodules)
-add_subdirectory(iopp)
+# we need iopp
+include(cmake/CPM.cmake)
+CPMAddPackage("gh:pdinklag/iopp#v1.0.0")
 
 add_executable(test-universe test_universe.cpp)
 target_link_libraries(test-universe PRIVATE code)
