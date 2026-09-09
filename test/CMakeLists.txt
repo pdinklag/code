@@ -1,6 +1,6 @@
 # we need iopp
 include(cmake/CPM.cmake)
-CPMAddPackage("gh:pdinklag/iopp#v1.0.0")
+CPMAddPackage("gh:pdinklag/iopp#v1.0.1")
 
 add_executable(test-universe test_universe.cpp)
 target_link_libraries(test-universe PRIVATE code)
